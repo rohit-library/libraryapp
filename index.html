@@ -3,144 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BMU Library Digital Hub</title>
+    <title>Library Smart App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/all.min.css">
     <style>
-        body { background-color: #f1f5f9; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        .header-gradient { background: linear-gradient(135deg, #075e54 0%, #128c7e 100%); }
-        .chat-area { flex: 1; overflow-y: auto; padding: 15px; background-color: #e5ddd5; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-repeat: repeat; display: flex; flex-direction: column; gap: 12px; }
-        .msg-bot { background: white; padding: 14px; border-radius: 0 18px 18px 18px; max-width: 90%; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); line-height: 1.6; color: #1e293b; border-left: 4px solid #128c7e; }
-        .msg-user { background: #dcf8c6; padding: 10px 16px; border-radius: 18px 18px 0 18px; max-width: 80%; align-self: flex-end; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-weight: 500; }
-        .highlight { background: #fef08a; font-weight: bold; color: #b91c1c; border-radius: 2px; padding: 0 2px; }
-        input:focus { border-color: #128c7e !important; box-shadow: 0 0 0 2px rgba(18, 140, 126, 0.2); }
+        body { background-color: #e5ddd5; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .chat-area { flex: 1; overflow-y: auto; padding: 15px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-repeat: repeat; display: flex; flex-direction: column; gap: 12px; }
+        .msg-bot { background: white; padding: 12px; border-radius: 0 15px 15px 15px; max-width: 90%; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: 1px solid #ddd; line-height: 1.5; color: #111; }
+        .msg-user { background: #dcf8c6; padding: 10px 15px; border-radius: 15px 15px 0 15px; max-width: 80%; align-self: flex-end; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 14px; }
+        .result-card { background: #f9f9f9; padding: 10px; border-radius: 10px; border-left: 4px solid #075e54; margin-top: 10px; font-size: 13px; }
+        .highlight { background: #fff176; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <!-- Professional App Header -->
-    <header class="header-gradient text-white p-4 shadow-xl shrink-0 z-10">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center border border-white/10">
-                    <i class="fas fa-university text-lg"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-sm leading-tight tracking-wide">BMU Library Assistant</h1>
-                    <div class="flex items-center gap-1.5">
-                        <span id="dot" class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
-                        <span id="st" class="text-[10px] font-bold opacity-90 uppercase tracking-tighter">Syncing Database...</span>
-                    </div>
-                </div>
+    <!-- App Header -->
+    <nav class="bg-[#075e54] text-white p-4 flex justify-between items-center shadow-lg shrink-0">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-university text-xl text-green-300"></i>
+            <div>
+                <h1 class="font-bold text-sm leading-none">Library Smart Assistant</h1>
+                <span id="st" class="text-[10px] text-green-200 opacity-80 uppercase font-bold tracking-widest">Connecting...</span>
             </div>
-            <button onclick="syncNow()" class="bg-black/10 hover:bg-black/20 p-2 rounded-lg transition-colors border border-white/5">
-                <i class="fas fa-sync-alt text-xs"></i>
-            </button>
         </div>
-    </header>
+        <button onclick="sync()" class="bg-white/10 p-2 rounded-full active:rotate-180 transition-all duration-500">
+            <i class="fas fa-sync-alt text-xs"></i>
+        </button>
+    </nav>
 
     <!-- Chat Interface -->
-    <main id="chatBox" class="chat-area custom-scrollbar">
+    <div id="chatBox" class="chat-area">
         <div class="msg-bot">
             <b>Namaste! 🙏</b><br>
-            Main BMU Library ka digital assistant hoon. Aap mujhse Library Staff, Books, E-Resources ya Sections ke baare mein kuch bhi pooch sakte hain.
+            Aap mujhse kuch bhi pooch sakte hain. <br>
+            <i>Example: "Library assistant", "Rohit", "E-resource", "Law"</i>
         </div>
-    </main>
+    </div>
 
-    <!-- App Search Bar -->
-    <div class="bg-[#f0f0f0] p-4 flex items-center gap-3 border-t shrink-0 shadow-2xl">
-        <div class="flex-1 relative">
-            <input type="text" id="userInput" onkeypress="if(event.key==='Enter') executeSearch()" 
-                class="w-full py-3.5 pl-5 pr-12 rounded-full outline-none text-sm bg-white border-none shadow-sm" 
-                placeholder="Type here (e.g. Staff, Science, Law)...">
-            <i class="fas fa-keyboard absolute right-4 top-4 text-gray-300"></i>
+    <!-- Search Input Bar -->
+    <div class="bg-[#f0f0f0] p-3 flex items-center gap-2 border-t shrink-0">
+        <div class="flex-1 bg-white rounded-full px-4 flex items-center shadow-sm">
+            <input type="text" id="ui" onkeypress="if(event.key==='Enter') search()" 
+                class="w-full py-2.5 outline-none text-sm bg-transparent" placeholder="Yahan likhein...">
         </div>
-        <button onclick="executeSearch()" class="bg-[#128c7e] hover:bg-[#075e54] text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all">
-            <i class="fas fa-paper-plane"></i>
+        <button onclick="search()" class="bg-[#128c7e] text-white w-11 h-11 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition">
+            <i class="fas fa-search"></i>
         </button>
     </div>
 
     <script>
-        // AAPKA GOOGLE SHEET CSV LINK
-        const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmpratIfSu-AhTJMuV1bb4ZqOadBTAkYPa6KWCURxyyz5lbi1c6HC2FcdoUz4M960ajQUp4lc3-eSz/pub?output=csv";
-        
-        let MASTER_DATABASE = [];
+        const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmpratIfSu-AhTJMuV1bb4ZqOadBTAkYPa6KWCURxyyz5lbi1c6HC2FcdoUz4M960ajQUp4lc3-eSz/pub?output=csv";
+        let DB = [];
 
-        // Ultimate Universal CSV Parser
+        // Robust CSV Parser (Quotes, Commas handling)
         function parseCSV(text) {
             const rows = [];
-            const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
-            if (lines.length < 1) return [];
-
-            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
+            let currentField = '', inQuotes = false, currentRow = [];
+            for (let char of text) {
+                if (char === '"') inQuotes = !inQuotes;
+                else if (char === ',' && !inQuotes) { currentRow.push(currentField.trim()); currentField = ''; }
+                else if (char === '\n' && !inQuotes) { currentRow.push(currentField.trim()); rows.push(currentRow); currentRow = []; currentField = ''; }
+                else currentField += char;
+            }
+            if (currentRow.length > 0) { currentRow.push(currentField.trim()); rows.push(currentRow); }
+            const headers = rows[0].map(h => h.replace(/"/g, '').trim());
+            return rows.slice(1).map(r => {
                 let obj = {};
-                headers.forEach((h, idx) => {
-                    let val = (values[idx] || "").trim().replace(/"/g, '');
-                    obj[h] = val;
-                });
-                rows.push(obj);
-            }
-            return rows;
+                headers.forEach((h, i) => obj[h] = (r[i] || "").replace(/"/g, ''));
+                return obj;
+            });
         }
 
-        async function syncNow() {
+        async function sync() {
             const st = document.getElementById('st');
-            const dot = document.getElementById('dot');
             try {
-                const res = await fetch(SHEET_CSV + "&nocache=" + Date.now());
+                const res = await fetch(URL + "&cb=" + Date.now());
                 const raw = await res.text();
-                MASTER_DATABASE = parseCSV(raw);
-                st.innerText = "● " + MASTER_DATABASE.length + " RECORDS READY";
-                st.className = "text-[10px] font-bold text-green-300 uppercase";
-                dot.className = "w-2 h-2 rounded-full bg-green-400";
-            } catch (e) { 
-                st.innerText = "● CONNECTION ERROR"; 
-                st.style.color = "#ff5252";
-            }
+                DB = parseCSV(raw);
+                st.innerText = "● ONLINE (" + DB.length + " RECORDS)";
+                st.style.color = "#4ade80";
+            } catch (e) { st.innerText = "● OFFLINE"; }
         }
 
-        function executeSearch() {
-            const ui = document.getElementById('userInput');
-            const q = ui.value.trim().toLowerCase();
+        function search() {
+            const ui = document.getElementById('ui');
+            let q = ui.value.trim().toLowerCase();
             if(!q) return;
 
             addMsg(ui.value, true);
             ui.value = "";
 
-            // Highly robust search: Matches multiple words and ignores symbols
-            const matches = MASTER_DATABASE.filter(item => {
-                const rowString = Object.values(item).join(' ').toLowerCase();
-                return rowString.includes(q);
+            // Smart Search: Checks if the query words exist in the row
+            const searchTerms = q.split(" ").filter(word => word.length > 1);
+            
+            const results = DB.filter(item => {
+                const itemString = Object.values(item).join(" ").toLowerCase();
+                // Check if all or any of the typed words are present
+                return searchTerms.every(term => itemString.includes(wordCleaner(term)));
             });
 
             setTimeout(() => {
-                if (matches.length > 0) {
-                    let html = `<b>Found ${matches.length} matches:</b><br>`;
-                    matches.slice(0, 10).forEach(res => {
-                        html += `<div style="background:#f9f9f9; padding:12px; border-radius:12px; border-left:5px solid #128c7e; margin-top:10px; font-size:13px; color:#1e293b; box-shadow:0 1px 3px rgba(0,0,0,0.05)">`;
-                        for(let [key, val] of Object.entries(res)) {
-                            if(val && val !== "-" && val !== " ") {
-                                if(String(val).startsWith('http')) {
-                                    html += `<a href="${val}" target="_blank" style="display:block; background:#2563eb; color:white; text-align:center; padding:10px; border-radius:10px; margin-top:10px; font-weight:bold; text-decoration:none; font-size:11px; text-transform:uppercase;">Visit Online Link</a>`;
-                                } else {
-                                    // Highlighting logic
-                                    let highlighted = val.replace(new RegExp(q, 'gi'), m => `<span class="highlight">${m}</span>`);
-                                    html += `<div style="margin-bottom:4px"><b>${key}:</b> ${highlighted}</div>`;
-                                }
+                if (results.length > 0) {
+                    let m = `<b>Mujhe ye ${results.length} results mile hain:</b><br>`;
+                    results.slice(0, 15).forEach(it => {
+                        m += `<div class="result-card">`;
+                        for(let [k, v] of Object.entries(it)) {
+                            if(v && v !== "-" && v !== " ") {
+                                if(v.startsWith('http')) m += `<a href="${v}" target="_blank" style="display:block; background:#2563eb; color:white; text-align:center; padding:8px; border-radius:8px; margin-top:10px; font-weight:bold; text-decoration:none; font-size:11px;">MUKHYA LINK / OPEN</a>`;
+                                else m += `<div><b>${k}:</b> ${v}</div>`;
                             }
                         }
-                        html += `</div>`;
+                        m += `</div>`;
                     });
-                    if(matches.length > 10) html += `<p style="font-size:10px; color:#777; text-align:center; margin-top:10px;">Showing top 10 results. Please be more specific.</p>`;
-                    addMsg(html, false);
+                    addMsg(m, false);
                 } else {
-                    addMsg(`Maaf kijiye, mujhe "<b>${q}</b>" se juda kuch nahi mila. <br><br><i>Suggestion: Kya aap Staff, Law, Management ya Facility dhoond rahe hain?</i>`, false);
+                    addMsg(`Maaf kijiye, mujhe "<b>${q}</b>" se juda kuch nahi mila. Try karein sirf naam ya department likhna.`, false);
                 }
-            }, 350);
+            }, 300);
         }
+
+        function wordCleaner(w) { return w.replace(/[^a-zA-Z0-9]/g, ''); }
 
         function addMsg(t, u) {
             const b = document.getElementById('chatBox');
@@ -151,7 +133,7 @@
             b.scrollTop = b.scrollHeight;
         }
 
-        window.onload = syncNow;
+        window.onload = sync;
     </script>
 </body>
 </html>
