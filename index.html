@@ -1,93 +1,108 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Library Search Tool</title>
+    <title>Library Smart Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/all.min.css">
     <style>
         body { background-color: #e5ddd5; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         .chat-area { flex: 1; overflow-y: auto; padding: 15px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); display: flex; flex-direction: column; gap: 10px; }
-        .msg { background: white; padding: 12px; border-radius: 12px; max-width: 85%; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: 1px solid #ddd; }
-        .user-msg { background: #dcf8c6; align-self: flex-end; border: none; }
+        .msg { background: white; padding: 12px; border-radius: 0 15px 15px 15px; max-width: 85%; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: 1px solid #ddd; }
+        .user-msg { background: #dcf8c6; align-self: flex-end; border-radius: 15px 15px 0 15px; border: none; }
+        .highlight { background: yellow; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <!-- Header -->
-    <nav class="bg-[#075e54] text-white p-4 flex justify-between items-center shadow-lg">
+    <nav class="bg-[#075e54] text-white p-4 flex justify-between items-center shadow-lg shrink-0">
         <div class="flex items-center gap-3">
-            <i class="fas fa-book text-xl"></i>
+            <i class="fas fa-university text-xl"></i>
             <div>
-                <h1 class="font-bold text-sm">Library Assistant</h1>
-                <span id="st" class="text-[9px] uppercase font-bold text-yellow-400">● Connecting...</span>
+                <h1 class="font-bold text-sm leading-none">Library Smart Hub</h1>
+                <span id="st" class="text-[10px] uppercase font-bold text-yellow-400">Connecting...</span>
             </div>
         </div>
-        <button onclick="sync()" class="text-[10px] border border-white/30 px-3 py-1 rounded bg-white/10 font-bold uppercase">Update Data</button>
+        <button onclick="sync()" class="text-[10px] border border-white/30 px-3 py-1 rounded bg-white/10 font-bold uppercase">Refresh Data</button>
     </nav>
 
-    <!-- Chat Area -->
     <div id="chat" class="chat-area">
-        <div class="msg"><b>Hello!</b> Main library assistant hoon. Aap kisi bhi book ka naam ya rack number search kar sakte hain.</div>
+        <div class="msg"><b>Welcome!</b> Main library assistant hoon. Aap kisi bhi book, author ya rack number ka naam likhein.</div>
     </div>
 
-    <!-- Search Input -->
-    <div class="bg-[#f0f0f0] p-3 flex items-center gap-2 border-t">
-        <input type="text" id="ui" onkeypress="if(event.key==='Enter') search()" 
-            class="flex-1 p-3.5 rounded-full outline-none text-sm shadow-sm" placeholder="Search book name...">
-        <button onclick="search()" class="bg-[#128c7e] text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md active:scale-90 transition">
+    <div class="bg-[#f0f0f0] p-3 flex items-center gap-2 border-t shrink-0">
+        <div class="flex-1 bg-white rounded-full px-4 flex items-center">
+            <input type="text" id="ui" onkeypress="if(event.key==='Enter') search()" 
+                class="w-full py-3 outline-none text-sm" placeholder="Type here to search...">
+        </div>
+        <button onclick="search()" class="bg-[#128c7e] text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg">
             <i class="fas fa-search text-lg"></i>
         </button>
     </div>
 
     <script>
-        // Aapka Google Sheet Link yahan set hai
         const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRprdfyXeedNnWWOmaYUmp_MvuRTLA6K-yoHeTu8cSI8oh4B_1UtO_cvPiwVoMSD0BOcmf7kkrx517/pub?output=csv";
         let DB = [];
 
-        function parseCSV(s){const a=[];let q=false;for(let r=l=c=0;c<s.length;c++){let cc=s[c],nc=s[c+1];a[r]=a[r]||[];a[r][l]=a[r][l]||'';if(cc=='"'&&q&&nc=='"'){a[r][l]+=cc;++c;continue}if(cc=='"'){q=!q;continue}if(cc==','&&!q){++l;continue}if(cc=='\r'&&nc=='\n'&&!q){++r;l=0;++c;continue}if(cc=='\n'&&!q){++r;l=0;continue}a[r][l]+=cc}return a}
+        function parseCSV(text) {
+            const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+            if(lines.length === 0) return [];
+            const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+            return lines.slice(1).map(line => {
+                const values = line.split(',').map(v => v.replace(/"/g, '').trim());
+                let obj = {};
+                headers.forEach((header, i) => { obj[header] = values[i] || ""; });
+                return obj;
+            });
+        }
 
         async function sync() {
+            const status = document.getElementById('st');
             try {
-                const res = await fetch(URL + "&cb=" + Date.now());
-                const raw = await res.text();
-                const p = parseCSV(raw).filter(r => r.length > 1);
-                const h = p[0].map(i => i.trim());
-                DB = p.slice(1).map(row => {
-                    let o = {}; h.forEach((k, i) => o[k] = row[i] ? row[i].trim() : ""); return o;
-                });
-                document.getElementById('st').innerText = "● Online (" + DB.length + ")";
-                document.getElementById('st').style.color = "#4ade80";
-            } catch (e) { document.getElementById('st').innerText = "● Sync Error"; }
+                const res = await fetch(URL + "&t=" + new Date().getTime());
+                const text = await res.text();
+                DB = parseCSV(text);
+                status.innerText = "● ONLINE (" + DB.length + " RECORDS)";
+                status.style.color = "#4ade80";
+            } catch (e) { status.innerText = "● SYNC ERROR"; }
         }
 
         function search() {
-            const i = document.getElementById('ui');
-            const q = i.value.trim().toLowerCase();
-            if(!q) return;
-            add(i.value, true);
-            i.value = "";
-            const res = DB.filter(it => Object.values(it).some(v => String(v).toLowerCase().includes(q)));
-            let m = res.length > 0 ? `Found ${res.length} matches:<br>` : "No results found.";
-            res.slice(0, 10).forEach(it => {
-                m += `<div style="background:#f9f9f9; padding:10px; border-radius:10px; border-left:4px solid #075e54; margin-top:10px; font-size:12px; box-shadow:0 1px 1px rgba(0,0,0,0.05)">`;
-                for(let [k,v] of Object.entries(it)) {
-                    if(String(v).startsWith('http')) m += `<a href="${v}" target="_blank" style="display:block; background:#2563eb; color:white; text-align:center; padding:6px; border-radius:6px; margin-top:6px; font-weight:bold; font-size:10px; text-decoration:none">OPEN LINK</a>`;
-                    else if(v) m += `<div style="margin-bottom:2px"><b>${k}:</b> ${v}</div>`;
-                }
-                m += `</div>`;
+            const input = document.getElementById('ui');
+            const query = input.value.trim().toLowerCase();
+            if(!query) return;
+            addBubble(input.value, true);
+            input.value = "";
+            const results = DB.filter(item => {
+                return Object.values(item).some(val => String(val).toLowerCase().includes(query));
             });
-            add(m, false);
+            setTimeout(() => {
+                if (results.length > 0) {
+                    let botMsg = `<b>Found ${results.length} result(s):</b><br>`;
+                    results.slice(0, 10).forEach(item => {
+                        botMsg += `<div style="background:#f9f9f9; padding:10px; border-radius:10px; border-left:4px solid #075e54; margin-top:10px; font-size:12px; box-shadow:0 1px 2px rgba(0,0,0,0.05)">`;
+                        for(let [key, value] of Object.entries(item)) {
+                            if(value && value !== "-") {
+                                let highlighted = String(value).replace(new RegExp(query, 'gi'), m => `<span class="highlight">${m}</span>`);
+                                botMsg += `<b>${key}:</b> ${highlighted}<br>`;
+                            }
+                        }
+                        botMsg += `</div>`;
+                    });
+                    addBubble(botMsg, false);
+                } else {
+                    addBubble("Nahi mila! Spelling check karein.", false);
+                }
+            }, 300);
         }
 
-        function add(t, u) {
-            const b = document.getElementById('chat');
-            const d = document.createElement('div');
-            d.className = `msg ${u ? 'user-msg' : ''}`;
-            d.innerHTML = t;
-            b.appendChild(d);
-            b.scrollTop = b.scrollHeight;
+        function addBubble(text, isUser) {
+            const box = document.getElementById('chat');
+            const div = document.createElement('div');
+            div.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+            div.innerHTML = `<div class="msg ${isUser ? 'user-msg' : ''}">${text}</div>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
         window.onload = sync;
     </script>
