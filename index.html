@@ -3,16 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Library Intelligence App</title>
+    <title>Library Smart Assistant</title>
+    <!-- App Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/all.min.css">
+    
     <style>
-        body { background-color: #e5ddd5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        .chat-bg { flex: 1; overflow-y: auto; padding: 15px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
-        .bot-bubble { background: white; padding: 12px; border-radius: 0 15px 15px 15px; max-width: 90%; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); animation: pop 0.3s ease; line-height: 1.6; color: #111; }
-        .user-bubble { background: #dcf8c6; padding: 10px 15px; border-radius: 15px 15px 0 15px; max-width: 85%; align-self: flex-end; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .highlight { background: #fff176; font-weight: bold; color: #000; padding: 0 2px; }
-        @keyframes pop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        body { background-color: #e5ddd5; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .chat-area { flex: 1; overflow-y: auto; padding: 15px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); display: flex; flex-direction: column; gap: 10px; }
+        .msg { background: white; padding: 12px; border-radius: 0 15px 15px 15px; max-width: 90%; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: 1px solid #ddd; line-height: 1.5; color: #111; animation: slideUp 0.3s ease; }
+        .user-msg { background: #dcf8c6; align-self: flex-end; border-radius: 15px 15px 0 15px; border: none; }
+        .highlight { background: #ffeb3b; font-weight: bold; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -21,26 +26,22 @@
         <div class="flex items-center gap-3">
             <i class="fas fa-university text-xl"></i>
             <div>
-                <h1 class="font-bold text-sm leading-none">Library Help Desk</h1>
-                <span id="st" class="text-[10px] text-yellow-400 font-bold">● CONNECTING...</span>
+                <h1 class="font-bold text-sm">Library Smart Hub</h1>
+                <span id="st" class="text-[10px] text-green-300 font-bold">● CONNECTING...</span>
             </div>
         </div>
-        <button onclick="sync()" class="bg-white/10 p-2 rounded-lg text-[10px] border border-white/20 uppercase font-bold">Sync Data</button>
+        <button onclick="sync()" class="bg-white/10 p-2 rounded-lg text-[10px] border border-white/20 uppercase font-bold">Sync</button>
     </nav>
 
-    <div id="chat" class="chat-bg">
-        <div class="bot-bubble">
-            <b>Namaste! 🙏</b><br>
-            Aapki Library ki sabhi jankari mere paas hai. <br><br>
-            Aap <b>"E-Resource", "Staff", "Timing" ya "Engineering"</b> jaise shabd likhkar search karein.
-        </div>
+    <div id="chat" class="chat-area">
+        <div class="msg"><b>Namaste! 🙏</b><br>Main active hoon. Aap kuch bhi search karein (Staff, Rules, timing, E-Resource).</div>
     </div>
 
     <div class="bg-[#f0f0f0] p-3 flex items-center gap-2 border-t shrink-0">
         <input type="text" id="ui" onkeypress="if(event.key==='Enter') search()" 
-            class="flex-1 p-3.5 rounded-full outline-none text-sm bg-white shadow-sm" placeholder="Type keywords (e.g. Science, Law)...">
-        <button onclick="search()" class="bg-[#128c7e] text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md active:scale-90 transition">
-            <i class="fas fa-search text-lg"></i>
+            class="flex-1 p-3.5 rounded-full outline-none text-sm bg-white shadow-sm" placeholder="Type here...">
+        <button onclick="search()" class="bg-[#128c7e] text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md">
+            <i class="fas fa-search"></i>
         </button>
     </div>
 
@@ -48,13 +49,12 @@
         const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRprdfyXeedNnWWOmaYUmp_MvuRTLA6K-yoHeTu8cSI8oh4B_1UtO_cvPiwVoMSD0BOcmf7kkrx517/pub?output=csv";
         let DB = [];
 
-        // Robust CSV Parser (Smart enough for complex sheets)
+        // Ultimate CSV Parser
         function parseCSV(text) {
             const rows = text.split(/\r?\n/).filter(line => line.trim() !== "");
-            if (rows.length < 2) return [];
+            if (rows.length < 1) return [];
             const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
             return rows.slice(1).map(row => {
-                // Regex to handle commas inside quotes
                 const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || row.split(',');
                 let obj = {};
                 headers.forEach((h, i) => {
@@ -68,69 +68,63 @@
         async function sync() {
             const st = document.getElementById('st');
             try {
-                // cache-busting: query string added to get fresh data every time
-                const res = await fetch(URL + "&nocache=" + new Date().getTime());
+                const res = await fetch(URL + "&t=" + Date.now());
                 const raw = await res.text();
                 DB = parseCSV(raw);
                 st.innerText = "● ONLINE (" + DB.length + " RECORDS)";
                 st.style.color = "#4ade80";
-                console.log("Database Loaded:", DB);
-            } catch (e) { 
-                st.innerText = "● SYNC ERROR"; 
-                st.style.color = "red";
-            }
+            } catch (e) { st.innerText = "● OFFLINE"; }
         }
 
         function search() {
             const ui = document.getElementById('ui');
-            const q = ui.value.trim().toLowerCase();
+            let q = ui.value.trim().toLowerCase();
             if(!q) return;
 
             addMsg(ui.value, true);
             ui.value = "";
 
-            // Smart Filter: Checks every property of the object
+            // Normalize search query (remove special chars)
+            let searchQ = q.replace(/[^a-zA-Z0-9]/g, '');
+
             const results = DB.filter(item => {
-                return Object.values(item).some(val => 
-                    String(val).toLowerCase().includes(q)
-                );
+                return Object.values(item).some(val => {
+                    let cleanVal = String(val).toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
+                    return cleanVal.includes(searchQ);
+                });
             });
 
             setTimeout(() => {
                 if (results.length > 0) {
-                    let m = `<b>Mujhe ye ${results.length} result(s) mile:</b><br>`;
+                    let m = `<b>Found ${results.length} result(s):</b><br>`;
                     results.slice(0, 10).forEach(it => {
-                        m += `<div style="background:#f9f9f9; padding:12px; border-radius:12px; border-left:5px solid #075e54; margin-top:10px; font-size:13px; color:#1a202c; border:1px solid #e2e8f0;">`;
+                        m += `<div style="background:#f9f9f9; padding:10px; border-radius:10px; border-left:4px solid #075e54; margin-top:10px; font-size:13px; color:black">`;
                         for(let [k, v] of Object.entries(it)) {
-                            if(v && v !== "-" && v !== " ") {
+                            if(v && v !== "-") {
                                 if(String(v).startsWith('http')) {
                                     m += `<a href="${v}" target="_blank" style="display:block; background:#2563eb; color:white; text-align:center; padding:8px; border-radius:8px; margin-top:10px; font-weight:bold; text-decoration:none; font-size:11px;">OPEN LINK / RESOURCE</a>`;
                                 } else {
-                                    // Highlight matching text
-                                    let cleanV = String(v).replace(new RegExp(q, 'gi'), match => `<span class="highlight">${match}</span>`);
-                                    m += `<div style="margin-bottom:4px"><b>${k}:</b> ${cleanV}</div>`;
+                                    m += `<b>${k}:</b> ${v}<br>`;
                                 }
                             }
                         }
                         m += `</div>`;
                     });
-                    if(results.length > 10) m += `<p style="font-size:10px; color:#718096; text-align:center; margin-top:10px;">Showing top 10 results. Be more specific if needed.</p>`;
                     addMsg(m, false);
                 } else {
-                    addMsg(`Maaf kijiye, "<b>${q}</b>" ke liye koi jankari nahi mili. <br><br>Try keywords like: <i>Facility, E-resource, Staff, Law, Management</i>.`, false);
+                    addMsg(`Maaf kijiye, "<b>${q}</b>" se juda kuch nahi mila. <br><br><i>Try: Staff, Timing, Law, Engineering...</i>`, false);
                 }
-            }, 400);
+            }, 300);
         }
 
         function addMsg(t, u) {
             const b = document.getElementById('chat');
             const d = document.createElement('div');
             d.className = `flex ${u ? 'justify-end' : 'justify-start'}`;
-            d.innerHTML = `<div class="bot-bubble ${u ? 'user-bubble' : ''}">${t}</div>`;
+            d.innerHTML = `<div class="msg ${u ? 'user-msg' : ''}">${t}</div>`;
             b.appendChild(d);
             b.scrollTop = b.scrollHeight;
         }
-
         window.onload = sync;
     </script>
 </body>
