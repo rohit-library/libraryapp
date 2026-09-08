@@ -2,141 +2,156 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Library Search System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BMU Library Digital Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/all.min.css">
     <style>
-        body { background-color: #f8fafc; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        .result-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 5px solid #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .highlight { background-color: #fef08a; padding: 0 2px; font-weight: bold; }
+        body { background-color: #f1f5f9; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .header-gradient { background: linear-gradient(135deg, #075e54 0%, #128c7e 100%); }
+        .chat-area { flex: 1; overflow-y: auto; padding: 15px; background-color: #e5ddd5; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-repeat: repeat; display: flex; flex-direction: column; gap: 12px; }
+        .msg-bot { background: white; padding: 14px; border-radius: 0 18px 18px 18px; max-width: 90%; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); line-height: 1.6; color: #1e293b; border-left: 4px solid #128c7e; }
+        .msg-user { background: #dcf8c6; padding: 10px 16px; border-radius: 18px 18px 0 18px; max-width: 80%; align-self: flex-end; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-weight: 500; }
+        .highlight { background: #fef08a; font-weight: bold; color: #b91c1c; border-radius: 2px; padding: 0 2px; }
+        input:focus { border-color: #128c7e !important; box-shadow: 0 0 0 2px rgba(18, 140, 126, 0.2); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
 
-    <!-- Header Section -->
-    <header class="bg-[#1e293b] text-white p-6 shadow-md">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
+    <!-- Professional App Header -->
+    <header class="header-gradient text-white p-4 shadow-xl shrink-0 z-10">
+        <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <i class="fas fa-university text-2xl text-blue-400"></i>
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center border border-white/10">
+                    <i class="fas fa-university text-lg"></i>
+                </div>
                 <div>
-                    <h1 class="text-xl font-bold">University Library Hub</h1>
-                    <p id="status" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Loading Data...</p>
+                    <h1 class="font-bold text-sm leading-tight tracking-wide">BMU Library Assistant</h1>
+                    <div class="flex items-center gap-1.5">
+                        <span id="dot" class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
+                        <span id="st" class="text-[10px] font-bold opacity-90 uppercase tracking-tighter">Syncing Database...</span>
+                    </div>
                 </div>
             </div>
-            <button onclick="syncData()" class="bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg text-xs font-bold transition uppercase">Refresh</button>
+            <button onclick="syncNow()" class="bg-black/10 hover:bg-black/20 p-2 rounded-lg transition-colors border border-white/5">
+                <i class="fas fa-sync-alt text-xs"></i>
+            </button>
         </div>
     </header>
 
-    <!-- Search Section -->
-    <main class="flex-grow max-w-4xl w-full mx-auto p-4">
-        <div class="mt-4 mb-8">
-            <div class="relative group">
-                <input type="text" id="searchInput" onkeyup="if(event.key==='Enter') executeSearch()" 
-                       class="w-full p-5 pl-12 rounded-2xl border-2 border-gray-200 shadow-sm focus:border-blue-500 outline-none transition-all text-lg" 
-                       placeholder="Search Staff, Rules, Timings, Resources...">
-                <i class="fas fa-search absolute left-4 top-6 text-gray-400 text-xl group-focus-within:text-blue-500"></i>
-            </div>
-            <p class="text-xs text-gray-500 mt-3 text-center italic">Tip: Aap "Staff", "Timing", ya "E-Resource" likhkar search karein.</p>
-        </div>
-
-        <!-- Display Area -->
-        <div id="resultsArea" class="space-y-4">
-            <div class="text-center py-20 text-gray-400">
-                <i class="fas fa-search-plus text-5xl mb-4 opacity-20"></i>
-                <p>Upar search box mein kuch likhein...</p>
-            </div>
+    <!-- Chat Interface -->
+    <main id="chatBox" class="chat-area custom-scrollbar">
+        <div class="msg-bot">
+            <b>Namaste! 🙏</b><br>
+            Main BMU Library ka digital assistant hoon. Aap mujhse Library Staff, Books, E-Resources ya Sections ke baare mein kuch bhi pooch sakte hain.
         </div>
     </main>
 
-    <footer class="p-6 text-center text-gray-400 text-xs border-t">
-        &copy; 2024 University Library Management System
-    </footer>
+    <!-- App Search Bar -->
+    <div class="bg-[#f0f0f0] p-4 flex items-center gap-3 border-t shrink-0 shadow-2xl">
+        <div class="flex-1 relative">
+            <input type="text" id="userInput" onkeypress="if(event.key==='Enter') executeSearch()" 
+                class="w-full py-3.5 pl-5 pr-12 rounded-full outline-none text-sm bg-white border-none shadow-sm" 
+                placeholder="Type here (e.g. Staff, Science, Law)...">
+            <i class="fas fa-keyboard absolute right-4 top-4 text-gray-300"></i>
+        </div>
+        <button onclick="executeSearch()" class="bg-[#128c7e] hover:bg-[#075e54] text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
 
     <script>
-        // AAPKA GOOGLE SHEET LINK
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRprdfyXeedNnWWOmaYUmp_MvuRTLA6K-yoHeTu8cSI8oh4B_1UtO_cvPiwVoMSD0BOcmf7kkrx517/pub?output=csv";
+        // AAPKA GOOGLE SHEET CSV LINK
+        const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmpratIfSu-AhTJMuV1bb4ZqOadBTAkYPa6KWCURxyyz5lbi1c6HC2FcdoUz4M960ajQUp4lc3-eSz/pub?output=csv";
         
-        let LIBRARY_DATA = [];
+        let MASTER_DATABASE = [];
 
-        // Universal Robust CSV Parser
-        function processCSV(text) {
+        // Ultimate Universal CSV Parser
+        function parseCSV(text) {
             const rows = [];
-            const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+            const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
             if (lines.length < 1) return [];
 
             const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
 
             for (let i = 1; i < lines.length; i++) {
-                // This regex handles commas inside quotes perfectly
                 const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
-                let rowObj = {};
-                headers.forEach((header, index) => {
-                    rowObj[header] = (values[index] || "").trim().replace(/"/g, '');
+                let obj = {};
+                headers.forEach((h, idx) => {
+                    let val = (values[idx] || "").trim().replace(/"/g, '');
+                    obj[h] = val;
                 });
-                rows.push(rowObj);
+                rows.push(obj);
             }
             return rows;
         }
 
-        async function syncData() {
-            const statusEl = document.getElementById('status');
+        async function syncNow() {
+            const st = document.getElementById('st');
+            const dot = document.getElementById('dot');
             try {
-                const response = await fetch(SHEET_URL + "&cb=" + Date.now());
-                const rawText = await response.text();
-                LIBRARY_DATA = processCSV(rawText);
-                statusEl.innerText = "● Database Online (" + LIBRARY_DATA.length + " Records)";
-                statusEl.classList.replace('text-gray-400', 'text-green-400');
-            } catch (err) {
-                statusEl.innerText = "● Connection Offline";
-                statusEl.style.color = "red";
+                const res = await fetch(SHEET_CSV + "&nocache=" + Date.now());
+                const raw = await res.text();
+                MASTER_DATABASE = parseCSV(raw);
+                st.innerText = "● " + MASTER_DATABASE.length + " RECORDS READY";
+                st.className = "text-[10px] font-bold text-green-300 uppercase";
+                dot.className = "w-2 h-2 rounded-full bg-green-400";
+            } catch (e) { 
+                st.innerText = "● CONNECTION ERROR"; 
+                st.style.color = "#ff5252";
             }
         }
 
         function executeSearch() {
-            const input = document.getElementById('searchInput');
-            const resultsArea = document.getElementById('resultsArea');
-            let query = input.value.trim().toLowerCase();
-            
-            if (!query) return;
+            const ui = document.getElementById('userInput');
+            const q = ui.value.trim().toLowerCase();
+            if(!q) return;
 
-            // Search logic: Check every cell of every row
-            const matches = LIBRARY_DATA.filter(item => {
-                const allValues = Object.values(item).join(" ").toLowerCase();
-                return allValues.includes(query);
+            addMsg(ui.value, true);
+            ui.value = "";
+
+            // Highly robust search: Matches multiple words and ignores symbols
+            const matches = MASTER_DATABASE.filter(item => {
+                const rowString = Object.values(item).join(' ').toLowerCase();
+                return rowString.includes(q);
             });
 
-            if (matches.length > 0) {
-                resultsArea.innerHTML = `<h3 class="font-bold text-gray-500 mb-4 uppercase text-xs tracking-widest">Found ${matches.length} matches:</h3>`;
-                matches.forEach(res => {
-                    let card = `<div class="result-card">`;
-                    for (let [key, value] of Object.entries(res)) {
-                        if (value && value !== "-") {
-                            if (String(value).startsWith('http')) {
-                                card += `<a href="${value}" target="_blank" class="block w-full bg-blue-600 text-white text-center py-3 rounded-xl font-bold mt-4 shadow-lg active:scale-95 transition uppercase text-xs tracking-wider">Open Resource / Location</a>`;
-                            } else {
-                                // Highlight the query word
-                                let highlightedText = value.replace(new RegExp(query, 'gi'), m => `<span class="highlight">${m}</span>`);
-                                card += `<div class="text-sm mb-1.5"><span class="text-gray-400 font-medium">${key}:</span> <span class="text-gray-800">${highlightedText}</span></div>`;
+            setTimeout(() => {
+                if (matches.length > 0) {
+                    let html = `<b>Found ${matches.length} matches:</b><br>`;
+                    matches.slice(0, 10).forEach(res => {
+                        html += `<div style="background:#f9f9f9; padding:12px; border-radius:12px; border-left:5px solid #128c7e; margin-top:10px; font-size:13px; color:#1e293b; box-shadow:0 1px 3px rgba(0,0,0,0.05)">`;
+                        for(let [key, val] of Object.entries(res)) {
+                            if(val && val !== "-" && val !== " ") {
+                                if(String(val).startsWith('http')) {
+                                    html += `<a href="${val}" target="_blank" style="display:block; background:#2563eb; color:white; text-align:center; padding:10px; border-radius:10px; margin-top:10px; font-weight:bold; text-decoration:none; font-size:11px; text-transform:uppercase;">Visit Online Link</a>`;
+                                } else {
+                                    // Highlighting logic
+                                    let highlighted = val.replace(new RegExp(q, 'gi'), m => `<span class="highlight">${m}</span>`);
+                                    html += `<div style="margin-bottom:4px"><b>${key}:</b> ${highlighted}</div>`;
+                                }
                             }
                         }
-                    }
-                    card += `</div>`;
-                    resultsArea.innerHTML += card;
-                });
-            } else {
-                resultsArea.innerHTML = `
-                    <div class="text-center py-20">
-                        <p class="text-gray-500 font-bold text-lg">Maaf kijiye, kuch nahi mila.</p>
-                        <p class="text-sm text-gray-400">Try keywords like: Science, Law, Library Staff, Timing.</p>
-                    </div>`;
-            }
-            // Auto scroll results
-            window.scrollTo({ top: 150, behavior: 'smooth' });
+                        html += `</div>`;
+                    });
+                    if(matches.length > 10) html += `<p style="font-size:10px; color:#777; text-align:center; margin-top:10px;">Showing top 10 results. Please be more specific.</p>`;
+                    addMsg(html, false);
+                } else {
+                    addMsg(`Maaf kijiye, mujhe "<b>${q}</b>" se juda kuch nahi mila. <br><br><i>Suggestion: Kya aap Staff, Law, Management ya Facility dhoond rahe hain?</i>`, false);
+                }
+            }, 350);
         }
 
-        // Initialize on load
-        window.onload = syncData;
+        function addMsg(t, u) {
+            const b = document.getElementById('chatBox');
+            const d = document.createElement('div');
+            d.className = u ? 'msg-user' : 'msg-bot';
+            d.innerHTML = t;
+            b.appendChild(d);
+            b.scrollTop = b.scrollHeight;
+        }
+
+        window.onload = syncNow;
     </script>
 </body>
 </html>
